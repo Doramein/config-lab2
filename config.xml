@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <package_name>curl</package_name>
+    <repo_url>https://dl-cdn.alpinelinux.org/alpine/v3.20/main/x86_64</repo_url>
+    <test_mode>false</test_mode>
+    <package_version>8.11.1-r0</package_version>
+    <output_file>graph.svg</output_file>
+    <max_depth>3</max_depth>
+    <filter_substring>so:</filter_substring>
+</config>

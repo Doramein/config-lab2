@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+    <package_name>A</package_name>
+    <repo_url>data/sample_graph.txt</repo_url>
+    <test_mode>true</test_mode>
+    <package_version>1.0.0</package_version>
+    <output_file>graph.svg</output_file>
+    <max_depth>3</max_depth>
+    <filter_substring>X</filter_substring>
+</config>
