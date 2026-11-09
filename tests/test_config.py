@@ -23,7 +23,7 @@ class TestConfig(unittest.TestCase):
         cfg = parse_config("config.xml")
         self.assertEqual(cfg.package_name, "curl")
         self.assertFalse(cfg.test_mode)
-        self.assertEqual(cfg.package_version, "8.11.1-r0")
+        self.assertEqual(cfg.package_version, "8.14.1-r2")
         self.assertEqual(cfg.max_depth, 3)
         self.assertEqual(cfg.output_file, "graph.svg")
         self.assertEqual(cfg.filter_substring, "so:")

@@ -28,3 +28,7 @@ htmlcov/
 *.tgz
 *.rar
 *.bin
+
+# Visual Studio / Output files
+.vs/
+*.svg
