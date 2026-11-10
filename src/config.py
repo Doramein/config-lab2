@@ -5,7 +5,7 @@ Parses and validates XML configuration files for the tool.
 
 from dataclasses import dataclass
 import os
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as element_tree
 
 
 MIN_ALLOWED_DEPTH = 1
@@ -104,7 +104,7 @@ def validate_repo_url(raw_value: str, test_mode: bool) -> str:
     return norm
 
 
-def _get_element_text(root: ET.Element, tag_name: str) -> str:
+def _get_element_text(root: element_tree.Element, tag_name: str) -> str:
     """Extract required tag text from XML element."""
     elem = root.find(tag_name)
     if elem is None:
@@ -118,8 +118,8 @@ def parse_config(file_path: str) -> AppConfig:
         raise ConfigError(f"Configuration file not found: {file_path}")
 
     try:
-        tree = ET.parse(file_path)
-    except ET.ParseError as exc:
+        tree = element_tree.parse(file_path)
+    except element_tree.ParseError as exc:
         raise ConfigError(f"XML parse error in {file_path}: {exc}") from exc
 
     root = tree.getroot()

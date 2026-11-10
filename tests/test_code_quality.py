@@ -12,6 +12,7 @@ Verifies:
 
 import ast
 import os
+import re
 import tokenize
 import unittest
 
@@ -21,6 +22,7 @@ MAX_FUNC_LINES = 40
 MAX_FUNC_ARGS = 7
 MAX_CYCLOMATIC_COMPLEXITY = 10
 BASE_COMPLEXITY = 1
+SNAKE_CASE_REGEX = r"^_{0,2}[a-z][a-z0-9_]*$"
 
 
 def _calc_complexity(node: ast.AST) -> int:
@@ -43,6 +45,23 @@ def _calc_complexity(node: ast.AST) -> int:
         elif isinstance(child, ast.BoolOp):
             complexity += len(child.values) - 1
     return complexity
+
+
+def _check_import_aliases(
+    tree: ast.AST, path: str, pattern: re.Pattern
+) -> list[str]:
+    """Check that module import aliases follow snake_case."""
+    errors: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.asname and not pattern.match(alias.asname):
+                    msg = (
+                        f"Alias '{alias.asname}' in {path}:{node.lineno} "
+                        "is not snake_case"
+                    )
+                    errors.append(msg)
+    return errors
 
 
 class TestCodeQuality(unittest.TestCase):
@@ -148,6 +167,15 @@ class TestCodeQuality(unittest.TestCase):
                         f"{path}:{tok.start[0]}"
                     )
                     self.assertFalse(is_comment, msg)
+
+    def test_pep8_naming(self):
+        """Rule I1: Module import aliases must follow snake_case."""
+        pattern = re.compile(SNAKE_CASE_REGEX)
+        for path in self._get_python_files():
+            with open(path, "r", encoding="utf-8") as file_handle:
+                tree = ast.parse(file_handle.read(), filename=path)
+            errors = _check_import_aliases(tree, path, pattern)
+            self.assertEqual(errors, [])
 
 
 if __name__ == "__main__":
