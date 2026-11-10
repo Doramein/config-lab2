@@ -35,28 +35,34 @@ def clean_dep_name(raw_dep: str) -> str:
     return cleaned
 
 
+def _parse_apkindex_block(
+    block: str,
+) -> tuple[str, str, list[str]]:
+    """Extract package name, version, and dependencies from index block."""
+    lines = block.strip().splitlines()
+    pkg_name = ""
+    version = ""
+    deps: list[str] = []
+
+    for line in lines:
+        if line.startswith(PREFIX_PKG):
+            pkg_name = line[len(PREFIX_PKG):].strip()
+        elif line.startswith(PREFIX_VER):
+            version = line[len(PREFIX_VER):].strip()
+        elif line.startswith(PREFIX_DEP):
+            raw_deps = line[len(PREFIX_DEP):].strip().split()
+            deps = [d for d in raw_deps if len(d) > EMPTY_LEN]
+
+    return pkg_name, version, deps
+
+
 def parse_apkindex_content(
     text: str,
 ) -> dict[str, dict[str, list[str]]]:
     """Parse raw APKINDEX text into a nested package dictionary."""
     catalog: dict[str, dict[str, list[str]]] = {}
-    blocks = text.split("\n\n")
-
-    for block in blocks:
-        lines = block.strip().splitlines()
-        pkg_name = ""
-        version = ""
-        deps: list[str] = []
-
-        for line in lines:
-            if line.startswith(PREFIX_PKG):
-                pkg_name = line[len(PREFIX_PKG):].strip()
-            elif line.startswith(PREFIX_VER):
-                version = line[len(PREFIX_VER):].strip()
-            elif line.startswith(PREFIX_DEP):
-                raw_deps = line[len(PREFIX_DEP):].strip().split()
-                deps = [d for d in raw_deps if len(d) > EMPTY_LEN]
-
+    for block in text.split("\n\n"):
+        pkg_name, version, deps = _parse_apkindex_block(block)
         if pkg_name and version:
             if pkg_name not in catalog:
                 catalog[pkg_name] = {}
@@ -117,6 +123,20 @@ def _read_tar_archive(raw_bytes: bytes) -> str:
         raise ApkParseError(msg) from exc
 
 
+def _load_local_apkindex(path: str) -> dict[str, dict[str, list[str]]]:
+    """Load package index from a local file or tar.gz archive."""
+    if not os.path.exists(path):
+        raise ApkParseError(f"Repository file not found: {path}")
+
+    if path.endswith((".tar.gz", ".apkindex.tar.gz")):
+        with open(path, "rb") as file_handle:
+            data = _read_tar_archive(file_handle.read())
+            return parse_apkindex_content(data)
+
+    with open(path, "r", encoding="utf-8") as file_handle:
+        return parse_apkindex_content(file_handle.read())
+
+
 def load_repository_index(
     url_or_path: str, is_test: bool
 ) -> dict[str, dict[str, list[str]]]:
@@ -135,16 +155,7 @@ def load_repository_index(
         archive_data = _download_index_data(url_or_path)
         return parse_apkindex_content(_read_tar_archive(archive_data))
 
-    if not os.path.exists(url_or_path):
-        raise ApkParseError(f"Repository file not found: {url_or_path}")
-
-    if url_or_path.endswith((".tar.gz", ".apkindex.tar.gz")):
-        with open(url_or_path, "rb") as file_handle:
-            data = _read_tar_archive(file_handle.read())
-            return parse_apkindex_content(data)
-
-    with open(url_or_path, "r", encoding="utf-8") as file_handle:
-        return parse_apkindex_content(file_handle.read())
+    return _load_local_apkindex(url_or_path)
 
 
 def get_direct_dependencies(

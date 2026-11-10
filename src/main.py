@@ -1,10 +1,12 @@
-"""Main entrypoint for the dependency graph visualizer CLI application."""
+"""Main entrypoint for the dependency graph visualizer CLI application.
+
+Initializes the workspace path and dispatches configured stages.
+"""
 
 import argparse
 import os
 import sys
 
-# Ensure project root is on sys.path when running script directly
 _ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _ROOT_DIR not in sys.path:
     sys.path.insert(0, _ROOT_DIR)
